@@ -10,7 +10,7 @@ resources:
 
 variables:
   # Container registry service connection established during pipeline creation
-  dockerRegistryServiceConnection: '4eb28dac-daa9-48c6-bcce-51bf2f9fc65f'
+  dockerRegistryServiceConnection: '39333f40-a51b-4811-ae5d-6c8ee49e3c2f'
   imageRepository: 'dockerdemo'
   containerRegistry: 'binarydad.azurecr.io'
   dockerfilePath: '$(Build.SourcesDirectory)/Dockerfile'
