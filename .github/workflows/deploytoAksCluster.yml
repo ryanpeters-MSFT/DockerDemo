@@ -1,0 +1,50 @@
+on: [push]
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    
+    - uses: azure/docker-login@v1
+      with:
+        login-server: binarydad.azurecr.io
+        username: ${{ secrets.acr_binarydad_username }}
+        password: ${{ secrets.acr_binarydad_password }}
+    
+    - name: Build and push image to ACR
+      id: build-image
+      run: |
+        docker build "$GITHUB_WORKSPACE/" -f  "Dockerfile" -t binarydad.azurecr.io/cluster:${{ github.sha }} --label dockerfile-path=Dockerfile
+        docker push binarydad.azurecr.io/cluster:${{ github.sha }}
+    
+    - uses: azure/k8s-set-context@v1
+      with:
+         kubeconfig: ${{ secrets.aks_cluster_kubeConfig }}
+      id: login
+    
+    - name: Create namespace
+      run: |
+        namespacePresent=`kubectl get namespace | grep devops | wc -l`
+        if [ $namespacePresent -eq 0 ]
+        then
+            echo `kubectl create namespace devops`
+        fi
+
+    - uses: azure/k8s-create-secret@v1
+      with:
+        namespace: devops
+        container-registry-url: binarydad.azurecr.io
+        container-registry-username: ${{ secrets.acr_binarydad_username }}
+        container-registry-password: ${{ secrets.acr_binarydad_password }}
+        secret-name: clusterdockerauth
+       
+    - uses: azure/k8s-deploy@v1.2
+      with:
+        namespace: devops
+        manifests: |
+          manifests/deployment.yml
+          manifests/service.yml
+        images: |
+          binarydad.azurecr.io/cluster:${{ github.sha }}
+        imagepullsecrets: |
+          clusterdockerauth
