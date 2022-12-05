@@ -1,0 +1,19 @@
+apiVersion : apps/v1
+kind: Deployment
+metadata:
+  name: "cluster-0fed"
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: "cluster-0fed"
+  template:
+    metadata:
+      labels:
+        app: "cluster-0fed"
+    spec:
+      containers:
+        - name: "cluster-0fed"
+          image: "binarydad.azurecr.io/cluster"
+          ports:
+          - containerPort: 80
